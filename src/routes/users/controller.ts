@@ -97,7 +97,7 @@ export async function usersController(app: FastifyInstance) {
 
     if (!userId) {
       return reply
-        .status(401)
+        .status(404)
         .send(JSON.stringify({ menssage: 'user not found' }))
     }
 
