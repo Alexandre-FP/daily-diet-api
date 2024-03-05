@@ -2,5 +2,5 @@
   "extends": [
     "@rocketseat/eslint-config/node"
   ],
-  "properties": "never"
+  "properties": "never" 
 }

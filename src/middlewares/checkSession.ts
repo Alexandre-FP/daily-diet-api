@@ -7,6 +7,8 @@ export async function checkSession(
   const sessionId = request.cookies.sessionId
 
   if (!sessionId) {
-    return reply.status(401).send(JSON.stringify({ mensage: 'Unauthorized' }))
+    return reply
+      .status(401)
+      .send(JSON.stringify({ mensage: 'Unauthorized, invalid cookie' }))
   }
 }

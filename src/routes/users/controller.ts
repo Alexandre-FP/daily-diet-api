@@ -31,7 +31,7 @@ export async function usersController(app: FastifyInstance) {
 
   app.get('/:id', async (request, reply) => {
     const paramsId = z.object({
-      id: z.string(),
+      id: z.string().uuid(),
     })
 
     const { id } = paramsId.parse(request.params)
