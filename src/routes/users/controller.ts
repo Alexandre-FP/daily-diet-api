@@ -64,8 +64,16 @@ export async function usersController(app: FastifyInstance) {
     const { id } = paramsId.parse(request.params)
     const { email, password } = parseUser.parse(request.body)
 
-    if (!id) {
-      return reply.send(JSON.stringify({ menssage: 'user not found' }))
+    const getUserId = await knex('users')
+      .where({
+        id,
+      })
+      .first()
+
+    if (!getUserId) {
+      return reply
+        .status(404)
+        .send(JSON.stringify({ menssage: 'user not found' }))
     }
 
     await knex('users')

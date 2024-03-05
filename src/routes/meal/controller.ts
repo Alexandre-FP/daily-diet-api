@@ -55,12 +55,14 @@ export async function dailyDiet(app: FastifyInstance) {
 
     const { sessionId } = request.cookies
 
-    const diety = await knex('meals').where({ 
-      id,
-      user_id: sessionId 
-    }).first() 
+    const diety = await knex('meals')
+      .where({
+        id,
+        user_id: sessionId,
+      })
+      .first()
 
-    if(diety?.user_id !== sessionId){
+    if (diety?.user_id !== sessionId) {
       return reply.status(409).send(
         JSON.stringify({
           menssage: 'Diet cannot be viewed by a different user.',
