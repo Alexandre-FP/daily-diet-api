@@ -78,13 +78,13 @@ export async function dailyDiet(app: FastifyInstance) {
 
     const { id } = parseIdDiety.parse(request.params)
 
-    const createdDiety = await knex('meals')
+    const existIdDiet = await knex('meals')
       .where({
         id,
       })
       .first()
 
-    if (!createdDiety) {
+    if (!existIdDiet) {
       return reply
         .status(409)
         .send(JSON.stringify({ menssage: 'Diet not found' }))
@@ -92,7 +92,7 @@ export async function dailyDiet(app: FastifyInstance) {
 
     const { sessionId } = request.cookies
 
-    if (createdDiety?.user_id !== sessionId) {
+    if (existIdDiet?.user_id !== sessionId) {
       return reply.status(409).send(
         JSON.stringify({
           menssage: 'Diet cannot be edited by a different user.',
