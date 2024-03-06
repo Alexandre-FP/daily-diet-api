@@ -8,14 +8,16 @@ export async function usersController(app: FastifyInstance) {
     const parseUser = z.object({
       email: z.string(),
       password: z.string(),
+      name: z.string(),
     })
 
-    const { email, password } = parseUser.parse(request.body)
+    const { email, password, name } = parseUser.parse(request.body)
 
     await knex('users').insert({
       id: randomUUID(),
       email,
       password,
+      name,
     })
 
     return reply
@@ -59,16 +61,29 @@ export async function usersController(app: FastifyInstance) {
     const parseUser = z.object({
       email: z.string(),
       password: z.string(),
+      name: z.string(),
     })
 
     const { id } = paramsId.parse(request.params)
-    const { email, password } = parseUser.parse(request.body)
+    const { email, password, name } = parseUser.parse(request.body)
 
     const getUserId = await knex('users')
       .where({
         id,
       })
       .first()
+
+    const userWithUpdatedEmail = await knex('users')
+      .where({
+        email,
+      })
+      .first()
+
+    if (userWithUpdatedEmail && userWithUpdatedEmail.id !== getUserId!.id) {
+      return reply
+        .status(400)
+        .send(JSON.stringify({ menssage: 'This email is already in use.' }))
+    }
 
     if (!getUserId) {
       return reply
@@ -83,6 +98,7 @@ export async function usersController(app: FastifyInstance) {
       .update({
         email,
         password,
+        name,
       })
 
     return reply

@@ -4,7 +4,7 @@ import { knex } from '../../database/knexConfig'
 import { checkSession } from '../../middlewares/checkSession'
 import { randomUUID } from 'node:crypto'
 
-export async function dailyDiet(app: FastifyInstance) {
+export async function mealsController(app: FastifyInstance) {
   app.post('/', { preHandler: checkSession }, async (request, reply) => {
     const parseDiet = z.object({
       name: z.string(),
@@ -99,7 +99,7 @@ export async function dailyDiet(app: FastifyInstance) {
         JSON.stringify({
           menssage: 'Diet cannot be edited by a different user.',
         }),
-      )
+      ) 
     }
 
     const parseDiet = z.object({
@@ -119,5 +119,84 @@ export async function dailyDiet(app: FastifyInstance) {
     return reply
       .status(201)
       .send(JSON.stringify({ menssage: 'Diet uptaded successfully' }))
+  })
+
+  app.delete('/:id', async (req, reply) => {
+    const parseId = z.object({
+      id: z.string(),
+    })
+
+    const { id } = parseId.parse(req.params)
+    const { sessionId } = req.cookies
+
+    const deleteDiet = await knex('meals')
+      .where({
+        id,
+      })
+      .first()
+
+    if (!deleteDiet) {
+      return reply
+        .status(404)
+        .send(JSON.stringify({ menssage: 'Diet not found' }))
+    }
+
+    if (deleteDiet?.user_id !== sessionId) {
+      return reply.status(409).send(
+        JSON.stringify({
+          menssage: 'Diet cannot be edited by a different user.',
+        }),
+      )
+    }
+
+    await knex('meals')
+      .where({
+        id,
+      })
+      .delete()
+
+    return reply
+      .status(200)
+      .send(JSON.stringify({ menssage: 'Diet successfully excluded' }))
+  })
+
+  app.get('/metrics', { preHandler: checkSession }, async (request, reply) => {
+    const totalMealsOnDiet = await knex('meals')
+      .where({ user_id: request.cookies.sessionId, is_on_diet: true })
+      .count('id', { as: 'total' })
+      .first()
+
+    const totalMealsOffDiet = await knex('meals')
+      .where({ user_id: request.cookies.sessionId, is_on_diet: false })
+      .count('id', { as: 'total' })
+      .first()
+
+    const totalMeals = await knex('meals')
+      .where({ user_id: request.cookies.sessionId })
+      .orderBy('created_at', 'desc')
+
+    const { bestOnDietSequence } = totalMeals.reduce(
+      (acc, meal) => {
+        if (meal.is_on_diet) {
+          acc.currentSequence += 1
+        } else {
+          acc.currentSequence = 0
+        }
+
+        if (acc.currentSequence > acc.bestOnDietSequence) {
+          acc.bestOnDietSequence = acc.currentSequence
+        }
+
+        return acc
+      },
+      { bestOnDietSequence: 0, currentSequence: 0 },
+    )
+
+    return reply.send({
+      totalMeals: totalMeals.length,
+      totalMealsOnDiet: totalMealsOnDiet?.total,
+      totalMealsOffDiet: totalMealsOffDiet?.total,
+      bestOnDietSequence,
+    })
   })
 }

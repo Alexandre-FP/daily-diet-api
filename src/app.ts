@@ -1,6 +1,6 @@
 import fastify from 'fastify'
 import { usersController } from './routes/users/controller'
-import { dailyDiet } from './routes/meal/controller'
+import { mealsController } from './routes/meal/controller'
 import cookie from '@fastify/cookie'
 
 export const app = fastify()
@@ -11,6 +11,6 @@ app.register(usersController, {
   prefix: 'users',
 })
 
-app.register(dailyDiet, {
+app.register(mealsController, {
   prefix: 'mels',
 })
